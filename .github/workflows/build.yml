@@ -1,0 +1,74 @@
+name: itsupp ci/cd
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Decode Keystore
+        run: |
+          mkdir -p src/main/resources
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > src/main/resources/keystore.p12
+
+      - name: Run Tests
+        run: ./mvnw clean test
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          JWT_SECRET: testjwtsecretforcionlymin32characterslong
+          DB_HOST: localhost
+          DB_NAME: test
+          DB_USER: test
+          DB_PASSWORD: test
+          ADMIN_PASSWORD: Admin1234
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Decode Keystore
+        run: |
+          mkdir -p src/main/resources
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > src/main/resources/keystore.p12
+
+      - name: Build Artifact
+        run: ./mvnw clean package -DskipTests
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          JWT_SECRET: testjwtsecretforcionlymin32characterslong
+          DB_HOST: localhost
+          DB_NAME: test
+          DB_USER: test
+          DB_PASSWORD: test
+          ADMIN_PASSWORD: Admin1234
+
+      - name: Verify Build Artifact
+        run: test -f target/itsupp-0.0.1-SNAPSHOT.jar
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: itsupp-app-jar
+          path: target/itsupp-0.0.1-SNAPSHOT.jar

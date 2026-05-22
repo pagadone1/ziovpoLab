@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16
+    container_name: itsupp_postgres
+    environment:
+      POSTGRES_DB: itsupp_db
+      POSTGRES_USER: itsupp_user
+      POSTGRES_PASSWORD: itsupp_pass
+    ports:
+      - "5436:5432"
+    volumes:
+      - itsupp_postgres_data:/var/lib/postgresql/data
+
+  app:
+    build: .
+    container_name: itsupp_app
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - "8443:8443"
+    env_file:
+      - .env
+
+volumes:
+  itsupp_postgres_data:
