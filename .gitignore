@@ -1,0 +1,63 @@
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+postman_license_api.json
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### keystore ###
+src/main/resources/keystore.p12
+certs/
+*.key
+*.pem
+*.p12
+*.csr
+*.srl
+
+# env
+.env
+.env.*
+!.env.example
+
+# Log files
+*.log
+logs/
+
+# Sensitive configuration (use application.properties.example in git)
+src/main/resources/application.properties
+
+# Mac
+.DS_Store
+**/.DS_Store
+
+# Docker local overrides
+docker-compose.override.yml
+docker-compose.local.yml
+
+# Postman
+postman_license_api.json
