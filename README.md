@@ -2,14 +2,14 @@
 
 ## Запуск
 
-1. Скопируйте `.env.example` в `.env` и задайте значения переменных.
-2. Поместите `keystore.p12` в `src/main/resources/` (или задайте `KEYSTORE_BASE64` в CI).
+1. Файл `.env` уже подготовлен (или скопируйте из `.env.example`).
+2. `keystore.p12` лежит в `src/main/resources/` (для локального HTTPS).
 3. `docker compose up --build` — PostgreSQL и приложение на `https://localhost:8443`.
 
 ## Секреты и CI
 
-GitHub Secrets (как в РБПО): `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`.  
-Локальные переменные — см. `.env.example`.
+В GitHub Actions настроены `KEYSTORE_BASE64` и `KEYSTORE_PASSWORD`.  
+Локальные переменные — в `.env`.
 
 ## Тема
 Сервис для отслеживания и обработки IT-тикетов внутри компании.

@@ -4,10 +4,12 @@ services:
   db:
     image: postgres:16
     container_name: itsupp_postgres
+    env_file:
+      - .env
     environment:
-      POSTGRES_DB: itsupp_db
-      POSTGRES_USER: itsupp_user
-      POSTGRES_PASSWORD: itsupp_pass
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
       - "5436:5432"
     volumes:
