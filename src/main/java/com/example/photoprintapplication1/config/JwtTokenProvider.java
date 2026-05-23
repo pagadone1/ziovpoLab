@@ -57,7 +57,7 @@ public class JwtTokenProvider {
                 .claim("purpose", "refresh_only") // назначение
                 .setIssuedAt(now)
                 .setExpiration(expiry)
-                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 

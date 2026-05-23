@@ -1,25 +1,28 @@
--- Лаба 2: схема лицензирования (PostgreSQL)
--- Hibernate ddl-auto=update создаёт таблицы автоматически; файл для отчёта и PgAdmin
+-- Лаба 2: PostgreSQL (база photoprint, пользователь photoprint_user)
+-- Создание БД: database/setup-labs-run.sql
+-- Таблицы создаёт Hibernate (ddl-auto=update); файл — для отчёта и PgAdmin
 
 CREATE TABLE IF NOT EXISTS users (
     id              BIGSERIAL PRIMARY KEY,
-    username        VARCHAR(255) NOT NULL UNIQUE,
-    password        VARCHAR(255) NOT NULL,
-    email           VARCHAR(255),
-    role            VARCHAR(50)  NOT NULL,
+    owner_id        BIGINT REFERENCES users(id),
+    username        VARCHAR(255) UNIQUE,
+    email           VARCHAR(255) UNIQUE,
+    password        VARCHAR(255),
+    role            VARCHAR(50),
+    enabled         BOOLEAN NOT NULL DEFAULT TRUE,
     created_at      TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS product (
     id              BIGSERIAL PRIMARY KEY,
-    name            VARCHAR(255) NOT NULL,
-    description     TEXT
+    name            VARCHAR(255) NOT NULL UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS license_type (
-    id                      BIGSERIAL PRIMARY KEY,
-    name                    VARCHAR(255) NOT NULL,
-    default_duration_in_days INTEGER NOT NULL
+    id                          BIGSERIAL PRIMARY KEY,
+    name                        VARCHAR(255) NOT NULL UNIQUE,
+    default_duration_in_days    INTEGER NOT NULL,
+    description                 VARCHAR(255)
 );
 
 CREATE TABLE IF NOT EXISTS license (
@@ -57,16 +60,16 @@ CREATE TABLE IF NOT EXISTS license_history (
     id              BIGSERIAL PRIMARY KEY,
     license_id      BIGINT NOT NULL REFERENCES license(id),
     user_id         BIGINT REFERENCES users(id),
-    status          VARCHAR(100),
-    description     TEXT,
-    created_at      TIMESTAMP
+    status          VARCHAR(100) NOT NULL,
+    change_date     TIMESTAMP,
+    description     TEXT
 );
 
-CREATE TABLE IF NOT EXISTS user_session (
+CREATE TABLE IF NOT EXISTS user_sessions (
     id              BIGSERIAL PRIMARY KEY,
-    user_id         BIGINT NOT NULL REFERENCES users(id),
-    refresh_token   VARCHAR(255) NOT NULL UNIQUE,
+    user_id         BIGINT REFERENCES users(id),
+    refresh_token   VARCHAR(1024),
     status          VARCHAR(50),
-    created_at      TIMESTAMPTZ NOT NULL,
-    expires_at      TIMESTAMPTZ NOT NULL
+    created_at      TIMESTAMP,
+    expires_at      TIMESTAMP
 );

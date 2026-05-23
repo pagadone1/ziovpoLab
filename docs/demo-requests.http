@@ -1,0 +1,56 @@
+### Лаба 2 — демо (HTTPS, порт 8443)
+### Перед запуском: spring-boot:run, admin / Admin1234!
+@baseUrl = https://localhost:8443
+@token = {{login.response.body.accessToken}}
+
+### 1. Вход admin
+# @name login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "Admin1234!"
+}
+
+### 2. Создать лицензию (ADMIN)
+# @name createLicense
+POST {{baseUrl}}/api/license
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "productId": 1,
+  "typeId": 1,
+  "deviceCount": 3,
+  "description": "Демо лицензия автосервис"
+}
+
+### 3. Активация (подставь code из шага 2)
+POST {{baseUrl}}/api/license/activate
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "activationKey": "ВСТАВЬ_CODE_ИЗ_CREATE",
+  "deviceMac": "AA:BB:CC:DD:EE:FF",
+  "deviceName": "PC-Service-1"
+}
+
+### 4. Проверка лицензии
+POST {{baseUrl}}/api/license/check
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "deviceMac": "AA:BB:CC:DD:EE:FF"
+}
+
+### 5. Продление (если срок < 7 дней или не активирована)
+POST {{baseUrl}}/api/license/renew
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "code": "ВСТАВЬ_CODE"
+}

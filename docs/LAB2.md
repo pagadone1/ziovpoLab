@@ -171,3 +171,5 @@ POST /api/license/renew        # USER, ADMIN
 `.env.example` → `.env`, БД `photoprint`, `mvnw spring-boot:run` или CI.
 
 Тесты: `mvnw test -Dspring.profiles.active=test`
+
+**Важно:** `KEYSTORE_PASSWORD=changeit` (пароль `certs/keystore.p12`). В GitHub Secrets для CI — то же значение.

@@ -31,3 +31,7 @@ HTTPS: https://localhost:8443
 | `TicketResponse` + ЭЦП | `dto/TicketResponse.java`, `SignatureService` |
 
 Домен автосервиса (заказы, клиенты) — в `PO6/demo` и лабе 1 (`main` — только инфраструктура).
+
+**Защита:** [docs/DEFENSE-QA.md](docs/DEFENSE-QA.md) · **Демо HTTP:** [docs/demo-requests.http](docs/demo-requests.http)
+
+При первом старте создаются: admin (`Admin1234!`), продукт *Car Service Desktop*, типы STANDARD/ANNUAL.

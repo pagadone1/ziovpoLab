@@ -5,6 +5,9 @@ public class AuthResponse {
     private String refreshToken;
     private String message;
 
+    public AuthResponse() {
+    }
+
     public AuthResponse(String accessToken, String refreshToken, String message) {
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
