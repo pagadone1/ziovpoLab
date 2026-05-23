@@ -1,39 +1,33 @@
 # IT Support (itsupp)
 
-Бэкенд на Spring Boot — внутренняя техподдержка: тикеты, категории, исполнители, SLA.
+Бэкенд на Spring Boot. Репозиторий: https://github.com/pagadone1/ziovpoLab (ветка `main`).
 
-Репозиторий курса: https://github.com/pagadone1/ziovpoLab (ветка `main`).
+JWT, HTTPS и CI из РБПО (PO6). Запуск: `.env` из `.env.example`, `keystore.p12` в `src/main/resources/`, далее `docker compose up --build` → https://localhost:8443
 
-JWT, HTTPS и CI взяты из РБПО (проект PO6), доменная логика — своя.
+---
 
-## Как запустить
+**Тема проекта:**
 
-Скопировать `.env.example` в `.env`, прописать пароли.
+Удалённая IT-поддержка внутренних пользователей — учёт и обработка заявок (тикетов) в компании.
 
-Положить `keystore.p12` в `src/main/resources/` (в git не коммитится).
+**Основные сущности:**
 
-```bash
-docker compose up --build
-```
+**Users** (пользователь) — логин, почта, отдел, роль; создаёт заявки, входит в систему.
 
-После старта: https://localhost:8443
+**Ticket** (тикет) — заголовок, описание, статус, срок; связь с категорией, исполнителем и SLA.
 
-Без Docker — PostgreSQL, база `itsupp_db`, пользователь `itsupp_user` (см. скрипты в папке `database` у соседних лаб, если настраивали вручную).
+**Executor** (исполнитель) — ФИО, почта, отдел; назначается на тикеты.
 
-## Переменные
+**Category** (категория) — тип заявки (инцидент, запрос, проблема).
 
-В `.env`: хост и креды БД, `JWT_SECRET`, `KEYSTORE_PASSWORD`, пароль админа.
+**SLA** — нормативы времени реакции и решения.
 
-В GitHub Actions нужны `KEYSTORE_BASE64` и `KEYSTORE_PASSWORD` — как в РБПО.
+**Операции сервиса:**
 
-## API
+CRUD по пользователям, тикетам, категориям, исполнителям, SLA.
 
-Авторизация: `POST /api/auth/register`, `/api/auth/login`, `/api/auth/refresh`.
+Бизнес-операции: назначение тикета исполнителю; закрытие с текстом решения; список просроченных; эскалация; тикеты конкретного исполнителя.
 
-Остальное под `/api/...` — тикеты, пользователи, категории и т.д. Админские методы только с `ROLE_ADMIN`.
+Авторизация: `POST /api/auth/register`, `/login`, `/refresh`. Админские эндпоинты — роль `ROLE_ADMIN`.
 
-## Лаба 1
-
-Чеклист и схемы: [docs/LAB1.md](docs/LAB1.md), [docs/er-diagram.md](docs/er-diagram.md), [docs/uml-overview.md](docs/uml-overview.md).
-
-CI: `.github/workflows/build.yml` — `test`, потом `build`.
+Лаба 1: [docs/LAB1.md](docs/LAB1.md), [docs/er-diagram.md](docs/er-diagram.md), [docs/uml-overview.md](docs/uml-overview.md)
