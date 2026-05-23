@@ -1,33 +1,31 @@
-# Car Service
+# Car Service — лабораторная 1
 
-Бэкенд на Spring Boot. Репозиторий: https://github.com/pagadone1/ziovpoLab (ветка `main`).
+Новый репозиторий серверной части: https://github.com/pagadone1/ziovpoLab (ветка `main`).
 
-Исходный РБПО — папка `PO6`. Запуск: `.env` из `.env.example`, `keystore.p12` в `src/main/resources/`, `docker compose up --build` → https://localhost:8443
+Сюда перенесено из РБПО (`PO6`): JWT access/refresh, роли, HTTPS, PostgreSQL, секреты, CI (test + build).
 
----
+**Тема проекта (автосервис):** клиенты, автомобили, механики, запчасти, заказы на ремонт — полный код в `PO6/demo`.  
+В `main` только инфраструктура лабы 1, без чужого домена (тикеты, SLA и т.п. убраны).
 
-**Тема проекта:**
+## Запуск
 
-Сервис для автосервиса — учёт клиентов, автомобилей, механиков, запчастей и заказов на ремонт и обслуживание.
+`.env.example` → `.env`, `keystore.p12` в `src/main/resources/`, затем:
 
-**Основные сущности:**
+```bash
+docker compose up --build
+```
 
-**Customer** (клиент) — имя, email, телефон; связь с автомобилями и заказами.
+https://localhost:8443
 
-**Vehicle** (автомобиль) — номер, марка, год; принадлежит клиенту.
+## API в этой ветке
 
-**Mechanic** (механик) — имя, специализация; выполняет заказы.
+| Назначение | Пути |
+|------------|------|
+| Регистрация / вход / refresh | `POST /api/auth/register`, `/login`, `/refresh` |
+| Пользователи (только ADMIN) | `GET/POST/PUT/DELETE /api/users` |
 
-**Part** (запчасть) — название, цена, остаток на складе.
+## Что сдавать по лабе 1
 
-**ServiceOrder** (заказ) — автомобиль, клиент, механик, запчасти, стоимость работ, статус.
+См. [docs/LAB1.md](docs/LAB1.md) — чеклист и ER/UML.
 
-**Операции сервиса:**
-
-CRUD по клиентам, автомобилям, механикам, запчастям и заказам.
-
-Бизнес-операции: закрытие заказа; расчёт суммы (запчасти + работа); добавление запчастей к заказу со списанием со склада; история заказов клиента; открытые заказы механика.
-
-JWT, HTTPS, роли — как в РБПО. Auth: `/api/auth/login`, `/api/auth/refresh`.
-
-Лаба 1: [docs/LAB1.md](docs/LAB1.md), [docs/er-diagram.md](docs/er-diagram.md), [docs/uml-overview.md](docs/uml-overview.md)
+Домен автосервиса для отчёта: `PO6` (Customer, Vehicle, ServiceOrder…).

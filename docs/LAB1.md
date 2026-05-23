@@ -1,26 +1,31 @@
-# Лабораторная работа 1
+# Лабораторная 1
 
-Проект: **Car Service (автосервис)**  
-GitHub: https://github.com/pagadone1/ziovpoLab (ветка `main`)
+**Репозиторий:** https://github.com/pagadone1/ziovpoLab, ветка `main`  
+**Тема:** Car Service (автосервис)  
+**РБПО-источник:** `PO6`
 
-Инфраструктура (JWT, роли, HTTPS, PostgreSQL, CI) перенесена из РБПО — репозиторий `PO6`.
+## Что в этом репозитории (лаба 1)
 
-## Задание
-
-| Требование | Где |
-|------------|-----|
-| Git-репозиторий | `ziovpoLab`, ветка `main` |
-| JWT access / refresh | `AuthService`, `/api/auth/*` |
-| Роли и доступ | `SecurityConfig` |
-| HTTPS | `keystore.p12`, `application.properties` |
+| Критерий | Файлы |
+|----------|--------|
+| Новый git-репозиторий сервера | `ziovpoLab` / `main` |
+| JWT access + refresh | `AuthService`, `JwtTokenUtils`, `/api/auth/*` |
+| Авторизация (роли) | `SecurityConfig`, `ROLE_ADMIN` / `ROLE_USER` |
+| HTTPS | `application.properties`, `keystore.p12` |
 | PostgreSQL | `docker-compose.yml`, `.env` |
-| Секреты | `.env`, GitHub Secrets |
+| Секреты | `.env`, GitHub: `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD` |
 | CI test + build | `.github/workflows/build.yml` |
-| UML | [uml-overview.md](uml-overview.md) |
-| ER | [er-diagram.md](er-diagram.md) |
 
-## Запуск
+## Что убрано как лишнее
 
-`.env.example` → `.env`, `docker compose up --build` → https://localhost:8443
+Код из шаблона **IT Support** (не автосервис): Ticket, SLA, Category, Executor, EscalationService и их контроллеры.  
+Для лабы 1 они не требуются.
 
-Полный домен автосервиса (CRUD заказов и т.д.) — в `PO6/demo`.
+## Домен автосервиса
+
+CRUD и бизнес-операции — в `PO6/demo` (Customer, Vehicle, Mechanic, Part, ServiceOrder).
+
+## Теория
+
+- [er-diagram.md](er-diagram.md)
+- [uml-overview.md](uml-overview.md)
