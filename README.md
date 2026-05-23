@@ -19,8 +19,23 @@
 2. Положить `keystore.p12` в `src/main/resources/`
 3. `application.properties.example` → `application.properties`
 4. PostgreSQL: база `ziovpo_db` (docker: порт 5436) или локально
-5. Run `ZiovpoApplication` в IDEA
+5. Run `ZiovpoApplication` в IDEA (см. ниже — сервер должен **работать**, не завершаться)
 6. Postman: import `postman/Lab3-Signature.postman_collection.json` + environment, SSL OFF
+
+### IDEA: почему «останавливается»
+
+Сервер **должен работать постоянно**. В консоли в конце должно быть:
+
+`Started ZiovpoApplication` и `Tomcat started on port 8443 (https)` — и **процесс не завершается**.
+
+Если видишь `Process finished with exit code 1` — приложение **упало** (часто нет `.env` или PostgreSQL).
+
+1. Файл `.env` в корне `ziOvpo-lab-lab3` (копия из `.env.example`)
+2. PostgreSQL запущен, база `ziovpo_db` существует
+3. `application.properties` скопирован из `application.properties.example`
+4. Run → не нажимай Stop — красный квадрат **останавливает** сервер
+
+Логин Postman: пароль admin = значение `ADMIN_PASSWORD` из `.env` (у тебя может быть `admin12345`, не `Admin1234!`).
 
 Пользователи после bootstrap: **admin** (пароль из ADMIN_PASSWORD), **client** / `Client1234!`
 

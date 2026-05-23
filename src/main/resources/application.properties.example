@@ -8,9 +8,9 @@ server.ssl.key-store=classpath:keystore.p12
 server.ssl.key-store-password=${KEYSTORE_PASSWORD}
 server.ssl.key-alias=laba6_key
 
-spring.datasource.url=jdbc:postgresql://${DB_HOST}:5432/${DB_NAME}
-spring.datasource.username=${DB_USER}
-spring.datasource.password=${DB_PASSWORD}
+spring.datasource.url=jdbc:postgresql://${DB_HOST:localhost}:5432/${DB_NAME:ziovpo_db}
+spring.datasource.username=${DB_USER:ziovpo_user}
+spring.datasource.password=${DB_PASSWORD:ziovpo_pass}
 spring.datasource.driver-class-name=org.postgresql.Driver
 
 spring.jpa.hibernate.ddl-auto=update
@@ -28,7 +28,7 @@ jwt.access.expiration=${JWT_ACCESS_EXPIRATION:900000}
 jwt.refresh.expiration.days=${JWT_REFRESH_DAYS:30}
 
 app.admin.username=${ADMIN_USERNAME:admin}
-app.admin.password=${ADMIN_PASSWORD}
+app.admin.password=${ADMIN_PASSWORD:Admin1234!}
 app.admin.email=${ADMIN_EMAIL:admin@test.com}
 
 signature.key-store-path=${SIGNATURE_KEYSTORE_PATH:classpath:keystore.p12}
