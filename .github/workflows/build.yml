@@ -1,10 +1,10 @@
-name: ziovpo ci/cd
+name: Lab3 CI
 
 on:
   push:
-    branches: [ "main", "lab3" ]
+    branches: [ "lab3" ]
   pull_request:
-    branches: [ "main", "lab3" ]
+    branches: [ "lab3" ]
 
 jobs:
   test:
@@ -30,7 +30,7 @@ jobs:
       - name: Make mvnw executable
         run: chmod +x mvnw
 
-      - name: Run Tests
+      - name: Run Tests (signature + license)
         run: ./mvnw clean test
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -39,7 +39,7 @@ jobs:
           DB_NAME: test
           DB_USER: test
           DB_PASSWORD: test
-          ADMIN_PASSWORD: Admin1234
+          ADMIN_PASSWORD: Admin1234!
 
   build:
     runs-on: ubuntu-latest
@@ -62,13 +62,25 @@ jobs:
           mkdir -p src/main/resources
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > src/main/resources/keystore.p12
 
-      - name: Export public certificate
+      - name: Export certificate from keystore
         run: |
           keytool -exportcert -alias laba6_key \
             -keystore src/main/resources/keystore.p12 \
             -storepass "${{ secrets.KEYSTORE_PASSWORD }}" \
             -file /tmp/cert.der
-          openssl x509 -inform der -in /tmp/cert.der -out /tmp/cert.pem
+          openssl x509 -inform der -in /tmp/cert.der -out /tmp/cert-from-keystore.pem
+
+      - name: Verify public key secret (SIGNATURE_PUBLIC_KEY_PEM)
+        env:
+          SIGNATURE_PUBLIC_KEY_PEM: ${{ secrets.SIGNATURE_PUBLIC_KEY_PEM }}
+        run: |
+          if [ -z "$SIGNATURE_PUBLIC_KEY_PEM" ]; then
+            echo "::warning::SIGNATURE_PUBLIC_KEY_PEM secret is not set"
+            exit 0
+          fi
+          printf '%s\n' "$SIGNATURE_PUBLIC_KEY_PEM" > /tmp/cert-from-secret.pem
+          openssl x509 -in /tmp/cert-from-secret.pem -noout -subject
+          diff /tmp/cert-from-keystore.pem /tmp/cert-from-secret.pem
 
       - name: Make mvnw executable
         run: chmod +x mvnw
@@ -82,21 +94,13 @@ jobs:
           DB_NAME: test
           DB_USER: test
           DB_PASSWORD: test
-          ADMIN_PASSWORD: Admin1234
+          ADMIN_PASSWORD: Admin1234!
 
       - name: Verify Build Artifact
         run: test -f target/ziovpo-0.0.1-SNAPSHOT.jar
 
-      - name: Verify Public Key
-        run: |
-          openssl x509 -in /tmp/cert.pem -text -noout | grep -E "Subject:|CN=|Public-Key:"
-
-      - name: Verify Signature Algorithm
-        run: |
-          openssl x509 -in /tmp/cert.pem -text -noout | grep -A2 "Signature"
-
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ziovpo-app-jar
+          name: ziovpo-lab3-jar
           path: target/ziovpo-0.0.1-SNAPSHOT.jar

@@ -30,29 +30,11 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/error").permitAll()
-                .requestMatchers("/api/auth/**").permitAll()
-
-                .requestMatchers(HttpMethod.PUT, "/api/users/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/users/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.GET, "/api/users/**").hasRole("ADMIN")
-
-                .requestMatchers(HttpMethod.POST, "/api/licenses").hasRole("ADMIN")
-
-                        .requestMatchers(HttpMethod.POST, "/api/products").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/products").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/products/**").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
-
-                        .requestMatchers(HttpMethod.POST, "/api/license-types").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/license-types").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/license-types/**").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/api/license-types/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/license-types/**").hasRole("ADMIN")
-
-                .requestMatchers("/api/licenses/**").authenticated()
-
+                        .requestMatchers("/error").permitAll()
+                        .requestMatchers("/api/auth/login", "/api/auth/refresh").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/licenses").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/licenses/renew").hasRole("ADMIN")
+                        .requestMatchers("/api/licenses/**").authenticated()
                         .anyRequest().denyAll()
                 )
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);

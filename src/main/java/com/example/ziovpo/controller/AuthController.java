@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.ziovpo.model.Users;
 import com.example.ziovpo.service.AuthService;
 
 import lombok.RequiredArgsConstructor;
@@ -20,16 +19,6 @@ import lombok.RequiredArgsConstructor;
 public class AuthController {
 
     private final AuthService authService;
-
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody Users user) {
-        try {
-            user.setRole("ROLE_USER");
-            return ResponseEntity.ok(authService.register(user));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> request) {

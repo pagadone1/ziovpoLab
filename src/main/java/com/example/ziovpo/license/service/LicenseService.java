@@ -2,7 +2,6 @@ package com.example.ziovpo.license.service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -13,7 +12,6 @@ import org.springframework.web.server.ResponseStatusException;
 import com.example.ziovpo.license.dto.ActivateLicenseRequest;
 import com.example.ziovpo.license.dto.CheckLicenseRequest;
 import com.example.ziovpo.license.dto.CreateLicenseRequest;
-import com.example.ziovpo.license.dto.LicenseHistoryResponse;
 import com.example.ziovpo.license.dto.LicenseResponse;
 import com.example.ziovpo.license.dto.RenewLicenseRequest;
 import com.example.ziovpo.license.dto.Ticket;
@@ -78,6 +76,10 @@ public class LicenseService {
 
 		LicenseLicense license = licenseRepository.findByCode(request.getActivationKey())
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "license not found"));
+
+		if (license.getOwner() == null || !license.getOwner().getId().equals(currentUser.getId())) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "only license owner can activate");
+		}
 
 		if (license.getUser() != null && !license.getUser().getId().equals(currentUser.getId())) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "license owned by another user");
@@ -192,6 +194,7 @@ public class LicenseService {
 		LicenseLicenseType type = licenseTypeService.getTypeOrFail(request.getTypeId());
 		Users owner = licenseApplicationUserService.getActiveUserOrFail(request.getOwnerId());
 		Users admin = licenseApplicationUserService.getActiveUserOrFail(adminId);
+		requireAdmin(admin);
 
 		LicenseLicense license = createNewLicense(request, product, type, owner);
 		LicenseLicense savedLicense = licenseRepository.save(license);
@@ -207,46 +210,6 @@ public class LicenseService {
 		return toResponse(savedLicense);
 	}
 
-	@Transactional(readOnly = true)
-	public List<LicenseHistoryResponse> getLicenseHistory(UUID licenseId, UUID userId) {
-		Users currentUser = licenseApplicationUserService.getActiveUserOrFail(userId);
-
-		LicenseLicense license = licenseRepository.findById(licenseId)
-				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "license not found"));
-
-		boolean isAdmin = "ROLE_ADMIN".equals(currentUser.getRole());
-		boolean isOwner = license.getOwner() != null && license.getOwner().getId().equals(currentUser.getId());
-		boolean isCurrentUser = license.getUser() != null && license.getUser().getId().equals(currentUser.getId());
-		if (!isAdmin && !isOwner && !isCurrentUser) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden");
-		}
-
-		return licenseHistoryRepository.findByLicense_IdOrderByChangeDateDescIdDesc(licenseId)
-				.stream()
-				.map(this::toHistoryResponse)
-				.toList();
-	}
-
-	@Transactional(readOnly = true)
-	public List<LicenseResponse> getAllLicenses(UUID adminId) {
-		Users admin = licenseApplicationUserService.getActiveUserOrFail(adminId);
-		requireAdmin(admin);
-
-		return licenseRepository.findAll().stream()
-				.map(this::toResponse)
-				.toList();
-	}
-
-	@Transactional(readOnly = true)
-	public LicenseResponse getLicenseByCode(String code, UUID adminId) {
-		Users admin = licenseApplicationUserService.getActiveUserOrFail(adminId);
-		requireAdmin(admin);
-
-		LicenseLicense license = licenseRepository.findByCode(code)
-				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "license not found"));
-		return toResponse(license);
-	}
-
 	@Transactional
 	public TicketResponse renewLicense(RenewLicenseRequest request, UUID userId) {
 		if (request.getActivationKey() == null || request.getActivationKey().isBlank()) {
@@ -254,6 +217,8 @@ public class LicenseService {
 		}
 
 		Users currentUser = licenseApplicationUserService.getActiveUserOrFail(userId);
+		requireAdmin(currentUser);
+
 		LicenseLicense license = licenseRepository.findByCode(request.getActivationKey())
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "license not found"));
 
@@ -334,16 +299,6 @@ public class LicenseService {
 		resp.setDeviceCount(license.getDeviceCount());
 		resp.setDescription(license.getDescription());
 		return resp;
-	}
-
-	private LicenseHistoryResponse toHistoryResponse(LicenseLicenseHistory history) {
-		return new LicenseHistoryResponse(
-				history.getId(),
-				history.getLicense() != null ? history.getLicense().getId() : null,
-				history.getUser() != null ? history.getUser().getId() : null,
-				history.getStatus(),
-				history.getChangeDate(),
-				history.getDescription());
 	}
 
 	private Ticket buildTicket(LicenseLicense license, LicenseDevice device) {
