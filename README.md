@@ -1,37 +1,33 @@
-# Car Service
+# Car Service — лабораторная 2 (лицензирование)
 
-Бэкенд на Spring Boot. Репозиторий: https://github.com/pagadone1/ziovpoLab (ветка `zadanie2`).
+Ветка: https://github.com/pagadone1/ziovpoLab (`zadanie2`)
 
-`.env` из `.env.example`. Тесты: `mvnw test -Dspring.profiles.active=test`
+Тема проекта — **автосервис**. В этой ветке — модуль лицензий на ПО (учёт ключей, устройств, подписанный тикет).
 
----
+Полное описание лабы: [docs/LAB2.md](docs/LAB2.md)  
+ER и SQL: [docs/schema-license.sql](docs/schema-license.sql)
 
-**Тема проекта:**
+## Запуск
 
-Сервис для автосервиса — учёт клиентов, автомобилей, механиков, запчастей и заказов на ремонт и обслуживание.
+```bash
+cp .env.example .env   # или скопировать вручную в Windows
+mvnw test -Dspring.profiles.active=test
+mvnw spring-boot:run
+```
 
-**Основные сущности:**
+HTTPS: https://localhost:8443  
+БД: PostgreSQL `photoprint`
 
-**Customer** (клиент) — имя, email, телефон; связь с автомобилями и заказами.
+## Реализовано по заданию
 
-**Vehicle** (автомобиль) — номер, марка, год; принадлежит клиенту.
+| Задача | Код |
+|--------|-----|
+| Таблицы и связи (ER) | `models/*`, Hibernate + `docs/schema-license.sql` |
+| Создание лицензии | `POST /api/license` |
+| Активация | `POST /api/license/activate` |
+| Проверка | `POST /api/license/check` |
+| Продление | `POST /api/license/renew` |
+| `Ticket` (7 полей) | `dto/Ticket.java` |
+| `TicketResponse` + ЭЦП | `dto/TicketResponse.java`, `SignatureService` |
 
-**Mechanic** (механик) — имя, специализация; выполняет заказы.
-
-**Part** (запчасть) — название, цена, остаток на складе.
-
-**ServiceOrder** (заказ) — автомобиль, клиент, механик, запчасти, стоимость работ, статус.
-
-**Операции сервиса:**
-
-CRUD по клиентам, автомобилям, механикам, запчастям и заказам.
-
-Бизнес-операции: закрытие заказа; расчёт суммы; добавление запчастей к заказу; история заказов клиента; открытые заказы механика.
-
----
-
-## Задание 2 (лицензирование)
-
-В ветке `zadanie2` — модуль лицензий для ПО автосервиса: `license`, `device`, подписанный `Ticket`.
-
-API: `POST /api/license`, `/activate`, `/check`, `/renew`.
+Домен автосервиса (заказы, клиенты) — в `PO6/demo` и лабе 1 (`main` — только инфраструктура).

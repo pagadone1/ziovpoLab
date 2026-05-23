@@ -4,7 +4,10 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "device_license")
+@Table(
+        name = "device_license",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"license_id", "device_id"})
+)
 public class DeviceLicense {
 
     @Id

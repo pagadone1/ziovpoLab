@@ -135,8 +135,13 @@ class LicenseServiceTest {
         TicketResponse activateResponse = licenseService.activateLicense(activateRequest, 2L);
         assertNotNull(activateResponse.getTicket());
         assertEquals("signed-base64", activateResponse.getSignature());
+        assertNotNull(activateResponse.getTicket().getServerTime());
+        assertTrue(activateResponse.getTicket().getTicketLifetimeSeconds() > 0);
+        assertNotNull(activateResponse.getTicket().getFirstActivationDate());
+        assertNotNull(activateResponse.getTicket().getExpirationDate());
         assertEquals(2L, activateResponse.getTicket().getUserId());
         assertEquals(50L, activateResponse.getTicket().getDeviceId());
+        assertFalse(activateResponse.getTicket().isBlocked());
 
         CheckLicenseRequest checkRequest = new CheckLicenseRequest();
         checkRequest.setDeviceMac(device.getMacAddress());
