@@ -75,7 +75,7 @@ public class LicenseController {
     }
 
     @PostMapping("/renew")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> renewLicense(
             @RequestBody RenewLicenseRequest request,
             Authentication authentication) {

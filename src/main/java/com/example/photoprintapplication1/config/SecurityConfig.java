@@ -45,7 +45,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/license").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/license/activate").hasAnyRole("USER", "ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/license/check").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/license/renew").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/license/renew").hasRole("ADMIN")
                         .requestMatchers("/error").permitAll()
                         .anyRequest().denyAll()
                 )

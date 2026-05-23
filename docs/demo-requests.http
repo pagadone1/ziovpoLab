@@ -1,10 +1,10 @@
-### Лаба 2 — демо (HTTPS, порт 8443)
-### Перед запуском: spring-boot:run, admin / Admin1234!
+### Лаба 2 — порядок: Admin login → Create → Client login → Activate → Check
 @baseUrl = https://localhost:8443
-@token = {{login.response.body.accessToken}}
+@adminToken = {{loginAdmin.response.body.accessToken}}
+@clientToken = {{loginClient.response.body.accessToken}}
 
-### 1. Вход admin
-# @name login
+### 1. Admin
+# @name loginAdmin
 POST {{baseUrl}}/api/auth/login
 Content-Type: application/json
 
@@ -13,44 +13,55 @@ Content-Type: application/json
   "password": "Admin1234!"
 }
 
-### 2. Создать лицензию (ADMIN)
+### 2. Создать лицензию (только ADMIN), владелец client (id=2)
 # @name createLicense
 POST {{baseUrl}}/api/license
-Authorization: Bearer {{token}}
+Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 {
   "productId": 1,
   "typeId": 1,
+  "ownerId": 2,
   "deviceCount": 3,
-  "description": "Демо лицензия автосервис"
+  "description": "Демо"
 }
 
-### 3. Активация (подставь code из шага 2)
-POST {{baseUrl}}/api/license/activate
-Authorization: Bearer {{token}}
+### 3. Client (владелец)
+# @name loginClient
+POST {{baseUrl}}/api/auth/login
 Content-Type: application/json
 
 {
-  "activationKey": "ВСТАВЬ_CODE_ИЗ_CREATE",
-  "deviceMac": "AA:BB:CC:DD:EE:FF",
-  "deviceName": "PC-Service-1"
+  "username": "client",
+  "password": "Client1234!"
 }
 
-### 4. Проверка лицензии
+### 4. Активация — только владелец (подставь code из createLicense)
+POST {{baseUrl}}/api/license/activate
+Authorization: Bearer {{clientToken}}
+Content-Type: application/json
+
+{
+  "activationKey": "КОД_ИЗ_CREATE",
+  "deviceMac": "AA:BB:CC:DD:EE:FF",
+  "deviceName": "PC-1"
+}
+
+### 5. Проверка (не меняет БД, только TicketResponse)
 POST {{baseUrl}}/api/license/check
-Authorization: Bearer {{token}}
+Authorization: Bearer {{clientToken}}
 Content-Type: application/json
 
 {
   "deviceMac": "AA:BB:CC:DD:EE:FF"
 }
 
-### 5. Продление (если срок < 7 дней или не активирована)
+### 6. Продление — снова Admin
 POST {{baseUrl}}/api/license/renew
-Authorization: Bearer {{token}}
+Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 {
-  "code": "ВСТАВЬ_CODE"
+  "code": "КОД_ИЗ_CREATE"
 }

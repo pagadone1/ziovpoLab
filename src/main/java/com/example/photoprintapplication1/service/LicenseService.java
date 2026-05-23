@@ -114,10 +114,8 @@ public class LicenseService {
             throw new IllegalStateException("License already activated by another user");
         }
 
-        if (license.getUser() == null
-                && !license.getOwner().getId().equals(userId)
-                && user.getRole() != Role.ADMIN) {
-            throw new IllegalStateException("Only owner or admin can activate this license");
+        if (license.getOwner() == null || !license.getOwner().getId().equals(userId)) {
+            throw new IllegalStateException("Only license owner can activate this license");
         }
 
         Device device = deviceRepository.findByMacAddress(request.getDeviceMac())
@@ -185,10 +183,8 @@ public class LicenseService {
             throw new IllegalStateException("License is blocked");
         }
 
-        if (license.getUser() != null
-                && !license.getUser().getId().equals(userId)
-                && user.getRole() != Role.ADMIN) {
-            throw new IllegalStateException("Not allowed to renew this license");
+        if (user.getRole() != Role.ADMIN) {
+            throw new IllegalStateException("Only administrator can renew a license");
         }
 
         LocalDateTime now = LocalDateTime.now();

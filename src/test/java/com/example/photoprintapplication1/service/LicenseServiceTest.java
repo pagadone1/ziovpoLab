@@ -165,12 +165,12 @@ class LicenseServiceTest {
         RenewLicenseRequest renewRequest = new RenewLicenseRequest();
         renewRequest.setCode(license.getCode());
 
-        when(userRepository.findById(2L)).thenReturn(Optional.of(owner));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(admin));
         when(licenseRepository.findByCode(license.getCode())).thenReturn(Optional.of(license));
         when(licenseRepository.save(license)).thenReturn(license);
         when(signatureService.signTicket(any())).thenReturn("renewed-signature");
 
-        TicketResponse response = licenseService.renewLicense(renewRequest, 2L);
+        TicketResponse response = licenseService.renewLicense(renewRequest, 1L);
 
         assertNotNull(response.getTicket());
         assertEquals("renewed-signature", response.getSignature());

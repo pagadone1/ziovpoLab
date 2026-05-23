@@ -42,7 +42,7 @@ class LicenseFlowIntegrationTest {
         String adminToken = login("admin", "Admin1234!");
 
         String licenseJson = """
-                {"productId":1,"typeId":1,"deviceCount":2,"description":"demo"}
+                {"productId":1,"typeId":1,"ownerId":2,"deviceCount":2,"description":"demo"}
                 """;
         MvcResult createResult = mockMvc.perform(post("/api/license")
                         .header("Authorization", "Bearer " + adminToken)
@@ -56,14 +56,14 @@ class LicenseFlowIntegrationTest {
         String code = (String) license.get("code");
         assertNotNull(code);
 
-        String userToken = login("admin", "Admin1234!");
+        String ownerToken = login("client", "Client1234!");
 
         String activateJson = """
                 {"activationKey":"%s","deviceMac":"AA:BB:CC:11:22:33","deviceName":"Workstation-1"}
                 """.formatted(code);
 
         MvcResult activateResult = mockMvc.perform(post("/api/license/activate")
-                        .header("Authorization", "Bearer " + userToken)
+                        .header("Authorization", "Bearer " + ownerToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(activateJson))
                 .andExpect(status().isOk())
@@ -84,7 +84,7 @@ class LicenseFlowIntegrationTest {
                 {"deviceMac":"AA:BB:CC:11:22:33"}
                 """;
         MvcResult checkResult = mockMvc.perform(post("/api/license/check")
-                        .header("Authorization", "Bearer " + userToken)
+                        .header("Authorization", "Bearer " + ownerToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(checkJson))
                 .andExpect(status().isOk())

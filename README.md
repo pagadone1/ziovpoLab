@@ -1,35 +1,73 @@
 # Лабораторная 2 — лицензирование (Car Service)
 
-Ветка: https://github.com/pagadone1/ziovpoLab (`zadanie2`)
+Сервер лицензий для ПО автосервиса: PostgreSQL, JWT, подписанный тикет, операции создания, активации, проверки и продления лицензии.
 
-Сервер лицензий для ПО автосервиса: PostgreSQL, JWT, подписанный `Ticket`, операции create / activate / check / renew.
+Репозиторий: pagadone1/ziovpoLab, ветка zadanie2.
 
-## Документация
+## Назначение
 
-- [docs/LAB2.md](docs/LAB2.md) — задание, ER, sequence
-- [docs/DEFENSE-QA.md](docs/DEFENSE-QA.md) — вопросы на защите
-- [docs/demo-requests.http](docs/demo-requests.http) — демо-запросы
-- [docs/schema-license.sql](docs/schema-license.sql) — схема БД
+Приложение выдаёт клиентскому ПО лицензию в виде Ticket — набора полей о сроках и блокировке. Ответ TicketResponse содержит тикет и электронную подпись (SHA256withRSA), чтобы клиент мог проверить, что данные не изменены.
+
+Администратор создаёт лицензии и продлевает их. Владелец лицензии активирует ключ на своём устройстве. Проверка лицензии только читает состояние и возвращает подписанный тикет.
+
+## Пользователи для демо
+
+admin / Admin1234! — создание и продление лицензий.
+
+client / Client1234! — владелец, активация на устройстве.
 
 ## Запуск
 
-```bash
-# БД: database/setup-labs-run.sql → photoprint / photoprint_user
-cp .env.example .env
-mvnw spring-boot:run
-```
+Создайте базу photoprint и пользователя photoprint_user (скрипт database/setup-labs-run.sql в корне репозитория лаб).
 
-https://localhost:8443 · admin / `Admin1234!`
+Скопируйте .env.example в .env и укажите пароль к keystore: KEYSTORE_PASSWORD=changeit.
 
-Тесты: `mvnw test -Dspring.profiles.active=test`
+Запуск:
 
-## API (лаба 2)
+    mvnw spring-boot:run
 
-| Метод | Путь | Роль |
-|-------|------|------|
-| POST | `/api/auth/login` | — |
-| POST | `/api/auth/refresh` | — |
-| POST | `/api/license` | ADMIN |
-| POST | `/api/license/activate` | USER, ADMIN |
-| POST | `/api/license/check` | USER, ADMIN |
-| POST | `/api/license/renew` | USER, ADMIN |
+Сервер: https://localhost:8443
+
+Тесты:
+
+    mvnw test -Dspring.profiles.active=test
+
+## API
+
+POST /api/auth/login — вход, JWT.
+
+POST /api/auth/refresh — обновление токена.
+
+POST /api/license — создание лицензии (роль ADMIN).
+
+POST /api/license/activate — активация на устройстве (владелец лицензии).
+
+POST /api/license/check — проверка, возврат TicketResponse.
+
+POST /api/license/renew — продление срока (только ADMIN).
+
+Все запросы к /api/license кроме auth — с заголовком Authorization: Bearer <token>.
+
+## Документация в проекте
+
+docs/LAB2.md — ER-диаграмма и sequence.
+
+docs/CODE-MAP.md — где что в коде для защиты.
+
+docs/DEFENSE-QA.md — типовые вопросы.
+
+postman/Lab2-License.postman_collection.json — коллекция Postman.
+
+docs/demo-requests.http — те же запросы для IDE.
+
+## Структура кода
+
+models/ — сущности JPA и таблицы PostgreSQL.
+
+service/LicenseService.java — create, activate, check, renew.
+
+service/SignatureService.java — подпись и проверка тикета.
+
+dto/Ticket.java, dto/TicketResponse.java — тикет и ответ с ЭЦП.
+
+controllers/LicenseController.java — REST API лицензий.

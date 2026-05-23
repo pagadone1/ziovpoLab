@@ -32,6 +32,12 @@ public class LicenseBootstrap implements CommandLineRunner {
     @Value("${app.bootstrap.admin.email:admin@carservice.local}")
     private String adminEmail;
 
+    @Value("${app.bootstrap.client.username:client}")
+    private String clientUsername;
+
+    @Value("${app.bootstrap.client.password:Client1234!}")
+    private String clientPassword;
+
     public LicenseBootstrap(
             UserRepository userRepository,
             ProductRepository productRepository,
@@ -54,6 +60,17 @@ public class LicenseBootstrap implements CommandLineRunner {
             admin.setEnabled(true);
             userRepository.save(admin);
             System.out.println("[bootstrap] admin: " + adminUsername);
+        }
+
+        if (userRepository.findByUsername(clientUsername).isEmpty()) {
+            User client = new User();
+            client.setUsername(clientUsername);
+            client.setEmail("client@carservice.local");
+            client.setPassword(passwordEncoder.encode(clientPassword));
+            client.setRole(Role.USER);
+            client.setEnabled(true);
+            userRepository.save(client);
+            System.out.println("[bootstrap] client (owner): " + clientUsername);
         }
 
         if (productRepository.count() == 0) {
