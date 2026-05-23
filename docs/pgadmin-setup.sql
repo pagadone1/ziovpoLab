@@ -1,6 +1,19 @@
--- Лаба 2: PostgreSQL (база photoprint, пользователь photoprint_user)
--- Запуск в PgAdmin: docs/pgadmin-setup.sql (полный скрипт + проверка)
--- Либо таблицы создаст Hibernate при старте приложения (ddl-auto=update)
+-- =============================================================================
+-- PgAdmin 4: создать все таблицы лабы 2 (база photoprint)
+-- =============================================================================
+-- 1) PgAdmin → Databases → photoprint → Query Tool
+-- 2) Вставить весь файл → Execute (F5)
+-- 3) Внизу должен быть список из 8 таблиц
+--
+-- Если базы нет — выполни блок «Создание БД» от имени postgres (отдельное окно).
+-- =============================================================================
+
+-- ---------- Создание БД (только если photoprint ещё нет; пользователь postgres) ----------
+-- CREATE USER photoprint_user WITH PASSWORD 'photoprint_pass';
+-- CREATE DATABASE photoprint OWNER photoprint_user;
+-- GRANT ALL PRIVILEGES ON DATABASE photoprint TO photoprint_user;
+
+-- ---------- Таблицы (порядок из-за внешних ключей) ----------
 
 CREATE TABLE IF NOT EXISTS users (
     id              BIGSERIAL PRIMARY KEY,
@@ -73,3 +86,23 @@ CREATE TABLE IF NOT EXISTS user_sessions (
     created_at      TIMESTAMP,
     expires_at      TIMESTAMP
 );
+
+-- Права для пользователя приложения (если таблицы создавал postgres)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'photoprint_user') THEN
+        GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO photoprint_user;
+        GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO photoprint_user;
+    END IF;
+END $$;
+
+-- ---------- Проверка: должно быть 8 таблиц ----------
+SELECT table_name AS "Таблицы в photoprint"
+FROM information_schema.tables
+WHERE table_schema = 'public'
+  AND table_type = 'BASE TABLE'
+ORDER BY table_name;
+
+-- Ожидаемые имена:
+-- device, device_license, license, license_history, license_type,
+-- product, user_sessions, users
