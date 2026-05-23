@@ -54,10 +54,6 @@ POST /api/license/renew — продление срока (только ADMIN).
 
 docs/LAB2.md — ER-диаграмма и sequence.
 
-docs/CODE-MAP.md — где что в коде для защиты.
-
-docs/DEFENSE-QA.md — типовые вопросы.
-
 postman/Lab2-License.postman_collection.json — коллекция Postman.
 
 docs/demo-requests.http — те же запросы для IDE.
