@@ -13,7 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 /**
- * Стартовые данные для демонстрации лабы 2 (автосервис — ПО Car Service).
+ * Стартовые данные для демо лабы 2.
  */
 @Component
 public class LicenseBootstrap implements CommandLineRunner {

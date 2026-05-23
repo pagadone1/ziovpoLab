@@ -1,6 +1,5 @@
 package com.example.photoprintapplication1.config;
 
-import com.example.photoprintapplication1.service.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -42,14 +41,13 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/auth/login", "/api/auth/refresh").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/license").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/license/activate").hasAnyRole("USER", "ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/license/check").hasAnyRole("USER", "ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/license/renew").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/error").permitAll()
-                        .anyRequest().authenticated()
+                        .anyRequest().denyAll()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

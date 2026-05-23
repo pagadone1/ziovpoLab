@@ -1,37 +1,35 @@
-# Car Service — лабораторная 2 (лицензирование)
+# Лабораторная 2 — лицензирование (Car Service)
 
 Ветка: https://github.com/pagadone1/ziovpoLab (`zadanie2`)
 
-Тема проекта — **автосервис**. В этой ветке — модуль лицензий на ПО (учёт ключей, устройств, подписанный тикет).
+Сервер лицензий для ПО автосервиса: PostgreSQL, JWT, подписанный `Ticket`, операции create / activate / check / renew.
 
-Полное описание лабы: [docs/LAB2.md](docs/LAB2.md)  
-ER и SQL: [docs/schema-license.sql](docs/schema-license.sql)
+## Документация
+
+- [docs/LAB2.md](docs/LAB2.md) — задание, ER, sequence
+- [docs/DEFENSE-QA.md](docs/DEFENSE-QA.md) — вопросы на защите
+- [docs/demo-requests.http](docs/demo-requests.http) — демо-запросы
+- [docs/schema-license.sql](docs/schema-license.sql) — схема БД
 
 ## Запуск
 
 ```bash
-cp .env.example .env   # или скопировать вручную в Windows
-mvnw test -Dspring.profiles.active=test
+# БД: database/setup-labs-run.sql → photoprint / photoprint_user
+cp .env.example .env
 mvnw spring-boot:run
 ```
 
-HTTPS: https://localhost:8443  
-БД: PostgreSQL `photoprint`
+https://localhost:8443 · admin / `Admin1234!`
 
-## Реализовано по заданию
+Тесты: `mvnw test -Dspring.profiles.active=test`
 
-| Задача | Код |
-|--------|-----|
-| Таблицы и связи (ER) | `models/*`, Hibernate + `docs/schema-license.sql` |
-| Создание лицензии | `POST /api/license` |
-| Активация | `POST /api/license/activate` |
-| Проверка | `POST /api/license/check` |
-| Продление | `POST /api/license/renew` |
-| `Ticket` (7 полей) | `dto/Ticket.java` |
-| `TicketResponse` + ЭЦП | `dto/TicketResponse.java`, `SignatureService` |
+## API (лаба 2)
 
-Домен автосервиса (заказы, клиенты) — в `PO6/demo` и лабе 1 (`main` — только инфраструктура).
-
-**Защита:** [docs/DEFENSE-QA.md](docs/DEFENSE-QA.md) · **Демо HTTP:** [docs/demo-requests.http](docs/demo-requests.http)
-
-При первом старте создаются: admin (`Admin1234!`), продукт *Car Service Desktop*, типы STANDARD/ANNUAL.
+| Метод | Путь | Роль |
+|-------|------|------|
+| POST | `/api/auth/login` | — |
+| POST | `/api/auth/refresh` | — |
+| POST | `/api/license` | ADMIN |
+| POST | `/api/license/activate` | USER, ADMIN |
+| POST | `/api/license/check` | USER, ADMIN |
+| POST | `/api/license/renew` | USER, ADMIN |

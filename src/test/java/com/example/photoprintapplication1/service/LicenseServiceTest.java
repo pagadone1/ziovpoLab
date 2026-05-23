@@ -69,7 +69,7 @@ class LicenseServiceTest {
 
         product = new Product();
         product.setId(10L);
-        product.setName("PhotoPrint Pro");
+        product.setName("Car Service Desktop");
 
         type = new LicenseType();
         type.setId(20L);

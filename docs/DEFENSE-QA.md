@@ -1,86 +1,47 @@
-# Лаба 2 — вопросы на защите и ответы
+# Вопросы на защите — лаба 2
 
-## Что сдавать
+## Сдача
 
-- Репозиторий: https://github.com/pagadone1/ziovpoLab
-- Ветка: **`zadanie2`**
-- Скрин: зелёный CI (jobs test + build)
-- Демо: [demo-requests.http](demo-requests.http)
+Репозиторий `ziovpoLab`, ветка **`zadanie2`**, зелёный CI, демо `docs/demo-requests.http`.
 
-## Типичные вопросы преподавателя
+---
 
-### 1. Где ER и таблицы PostgreSQL?
+### 1. Где таблицы и ER?
 
-**Ответ:** JPA-сущности в `models/`, связи `@ManyToOne` / `@OneToMany`. Схема для отчёта — `docs/schema-license.sql`. БД `photoprint`, пользователь `photoprint_user` (скрипт `database/setup-labs-run.sql` в корне workspace).
+`models/` + `docs/schema-license.sql`. Связи: license ↔ product, type, user, device через device_license, история в license_history.
 
-### 2. Чем Ticket отличается от License?
+### 2. Ticket — какие поля?
 
-**Ответ:** `License` — запись в БД (ключ, сроки, владелец). `Ticket` — DTO для клиента: снимок состояния лицензии + время сервера + TTL тикета. Клиент не видит всю таблицу, только подписанный тикет.
+serverTime, ticketLifetimeSeconds, firstActivationDate, expirationDate, userId, deviceId, blocked — класс `dto/Ticket.java`, сборка в `LicenseService.buildTicket`.
 
-### 3. Зачем TicketResponse и ЭЦП?
+### 3. Зачем TicketResponse?
 
-**Ответ:** `TicketResponse` = `ticket` + `signature` (Base64). Подпись SHA256withRSA по JSON тикета. Клиент проверяет, что данные не подменены (`SignatureService.verifyTicket`).
+Передача клиенту подписанного тикета: `ticket` + `signature` (SHA256withRSA, Base64). Подделка без приватного ключа невозможна.
 
-### 4. Поля Ticket по заданию?
+### 4. Создание лицензии
 
-| Поле | Назначение |
-|------|------------|
-| serverTime | Текущее время сервера |
-| ticketLifetimeSeconds | Сколько секунд тикет считать валидным (3600) |
-| firstActivationDate | Дата первой активации лицензии |
-| expirationDate | Дата окончания лицензии |
-| userId | Кто активировал |
-| deviceId | На каком устройстве |
-| blocked | Заблокирована ли лицензия |
+ADMIN, `POST /api/license` → код, product, type, лимит устройств, запись в license_history (CREATED).
 
-Код: `LicenseService.buildTicket`, класс `dto/Ticket.java`.
+### 5. Активация
 
-### 5. Как работает создание лицензии?
+Ключ + MAC устройства → привязка device_license, даты активации/окончания, ответ TicketResponse.
 
-**Ответ:** ADMIN → `POST /api/license` с `productId`, `typeId`, опционально `ownerId`, `deviceCount`. Генерируется уникальный `code`, пишется `license_history` со статусом CREATED. Диаграмма: `docs/LAB2.md`.
+### 6. Проверка
 
-### 6. Как работает активация?
+`POST /api/license/check` по MAC — валидация срока и привязки, новый подписанный тикет.
 
-**Ответ:** USER/ADMIN передаёт `activationKey` (code) и MAC устройства. Создаётся/находится `device`, связь `device_license`, при первой активации — `firstActivationDate`, `endingDate` = now + дни из `license_type`. Возвращается подписанный `TicketResponse`.
+### 7. Продление
 
-### 7. Проверка vs активация?
+Если не активирована или до конца ≤ 7 дней — продление endingDate на срок типа лицензии.
 
-**Ответ:** **Проверка** (`/check`) — лицензия уже привязана к устройству, проверяем срок и blocked, отдаём новый подписанный тикет. **Активация** (`/activate`) — первичная привязка ключа к устройству.
+### 8. Роли
 
-### 8. Когда можно продлить?
+Создание — только ADMIN. Остальные операции лицензий — USER и ADMIN. JWT в заголовке `Authorization: Bearer ...`.
 
-**Ответ:** `renew` — если лицензия не активирована или до конца осталось ≤ 7 дней. К `endingDate` добавляются дни из типа лицензии.
+### 9. Почему есть auth/login?
 
-### 9. Какие роли на эндпоинтах?
+JWT нужен для вызова защищённых эндпоинтов лицензий (из лабы 1, минимум login + refresh).
 
-| Метод | Роль |
-|-------|------|
-| POST /api/license | ADMIN |
-| /activate, /check, /renew | USER, ADMIN |
-| /api/auth/* | без токена |
+### 10. Как запустить?
 
-`SecurityConfig` + `@PreAuthorize` на контроллере.
-
-### 10. Почему тема автосервис, а пакет photoprint?
-
-**Ответ:** Историческое имя Maven-проекта; продукт в БД — **Car Service Desktop** (`LicenseBootstrap`). Домен заказов/клиентов — в PO6 (`main` — инфраструктура лабы 1).
-
-### 11. Как запустить локально?
-
-```text
-1. PostgreSQL: БД photoprint (setup-labs-run.sql)
-2. .env из .env.example (`KEYSTORE_PASSWORD=changeit` для `certs/keystore.p12`)
-3. mvnw spring-boot:run
-4. https://localhost:8443
-5. Логин admin / Admin1234!
-```
-
-### 12. Как доказать, что тесты проходят?
-
-`mvnw test -Dspring.profiles.active=test` — unit + `LicenseFlowIntegrationTest` (полный сценарий) + `SignatureServiceTest` (подпись).
-
-## Что НЕ путать на защите
-
-- Лаба 1 = `main` (JWT, HTTPS, CI), без домена тикетов.
-- Лаба 2 = `zadanie2` (лицензии), не путать Ticket IT-support с Ticket лицензии.
-- `check` в задании = получение информации о лицензии через подписанный тикет.
+PostgreSQL `photoprint`, `.env` с `KEYSTORE_PASSWORD=changeit`, `mvnw spring-boot:run`, логин admin.

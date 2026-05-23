@@ -1,10 +1,10 @@
-name: CI Pipeline
+name: Lab2 CI
 
 on:
   push:
-    branches: [ main, master, zadanie2 ]
+    branches: [ zadanie2 ]
   pull_request:
-    branches: [ main, master, zadanie2 ]
+    branches: [ zadanie2 ]
 
 jobs:
   test:
@@ -49,14 +49,8 @@ jobs:
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD != '' && secrets.KEYSTORE_PASSWORD || 'changeit' }}
           JWT_SECRET: testjwtsecretforcionlymin32characterslong
-          DB_USERNAME: ci
-          DB_PASSWORD: ci
+          DB_USERNAME: photoprint_user
+          DB_PASSWORD: photoprint_pass
 
       - name: Verify JAR
         run: test -f target/photoprintapplication-0.0.1-SNAPSHOT.jar
-
-      - name: Upload JAR artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: photoprint-application
-          path: target/photoprintapplication-0.0.1-SNAPSHOT.jar

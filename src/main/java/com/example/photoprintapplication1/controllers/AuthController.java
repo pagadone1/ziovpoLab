@@ -3,13 +3,11 @@ package com.example.photoprintapplication1.controllers;
 import com.example.photoprintapplication1.config.JwtTokenProvider;
 import com.example.photoprintapplication1.dto.AuthRequest;
 import com.example.photoprintapplication1.dto.AuthResponse;
-import com.example.photoprintapplication1.dto.RegisterRequest;
-import com.example.photoprintapplication1.models.UserSession;
 import com.example.photoprintapplication1.models.SessionStatus;
+import com.example.photoprintapplication1.models.UserSession;
 import com.example.photoprintapplication1.repository.UserSessionRepository;
 import com.example.photoprintapplication1.service.AuthService;
 import com.example.photoprintapplication1.service.CustomUserDetailsService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -30,20 +28,24 @@ import java.util.Map;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
+    private final AuthenticationManager authenticationManager;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final AuthService authService;
+    private final UserSessionRepository userSessionRepository;
+    private final CustomUserDetailsService customUserDetailsService;
 
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
-
-    @Autowired
-    private AuthService authService;
-
-    @Autowired
-    private UserSessionRepository userSessionRepository;
-
-    @Autowired
-    private CustomUserDetailsService customUserDetailsService;
+    public AuthController(
+            AuthenticationManager authenticationManager,
+            JwtTokenProvider jwtTokenProvider,
+            AuthService authService,
+            UserSessionRepository userSessionRepository,
+            CustomUserDetailsService customUserDetailsService) {
+        this.authenticationManager = authenticationManager;
+        this.jwtTokenProvider = jwtTokenProvider;
+        this.authService = authService;
+        this.userSessionRepository = userSessionRepository;
+        this.customUserDetailsService = customUserDetailsService;
+    }
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) {
@@ -66,11 +68,6 @@ public class AuthController {
         return ResponseEntity.ok(new AuthResponse(accessToken, refreshToken, "Login successful"));
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@RequestBody RegisterRequest request) {
-        return ResponseEntity.ok(new AuthResponse(null, null, authService.register(request)));
-    }
-
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponse> refresh(@RequestBody Map<String, String> request) {
         String oldRefreshToken = request.get("refreshToken");
@@ -81,27 +78,23 @@ public class AuthController {
 
         String username = jwtTokenProvider.getUsernameFromToken(oldRefreshToken);
 
-        // Находим сессию по старому refresh-токену
         UserSession oldSession = userSessionRepository.findByRefreshToken(oldRefreshToken)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Session not found"));
 
-        // Проверяем, активна ли сессия
         if (oldSession.getStatus() != SessionStatus.ACTIVE) {
             return ResponseEntity.status(403).body(new AuthResponse(null, null, "Refresh token already used or revoked"));
         }
 
-        // Ревокируем старый refresh-токен
         oldSession.setStatus(SessionStatus.REVOKED);
         userSessionRepository.save(oldSession);
 
-        // Создаём новую пару токенов
         UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
-        Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                userDetails, null, userDetails.getAuthorities());
 
         String newAccessToken = jwtTokenProvider.createAccessToken(authentication);
         String newRefreshToken = jwtTokenProvider.createRefreshToken(authentication);
 
-        // Создаём новую сессию
         UserSession newSession = new UserSession();
         newSession.setUser(oldSession.getUser());
         newSession.setRefreshToken(newRefreshToken);
