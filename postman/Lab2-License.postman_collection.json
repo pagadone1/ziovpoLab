@@ -1,16 +1,218 @@
 {
   "info": {
     "name": "Lab2 Car Service — License",
-    "description": "Лаба 2: лицензирование. Порядок: Login Admin → Create license → Login Client → Activate → Check → (опционально) Renew от Admin.\n\nПользователи: admin/Admin1234!, client/Client1234!\nHTTPS: отключите Verify SSL в Postman при localhost.",
+    "description": "Лабораторная 2: create, activate, check, renew + Ticket/TicketResponse.\n\nПеред запуском:\n1) IDEA: Run PhotoprintApplication или mvnw spring-boot:run\n2) PostgreSQL photoprint, файл .env\n3) Postman Settings → SSL certificate verification OFF\n4) Environment: Lab2 Local\n\nСценарий по заданию — папка «0. Лаба 2 — сценарий» (Collection Runner сверху вниз).\n\nПользователи: admin/Admin1234!, client/Client1234!\nproductId=1, typeId=1 (STANDARD 30д), ownerId=2 (client).\n\nRenew после Create (до Activate) — срабатывает (лицензия не активирована).\nRenew после Activate — только если до конца ≤7 дней.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     { "key": "baseUrl", "value": "https://localhost:8443" },
+    { "key": "adminToken", "value": "" },
+    { "key": "clientToken", "value": "" },
     { "key": "jwtToken", "value": "" },
     { "key": "refreshToken", "value": "" },
-    { "key": "licenseCode", "value": "" }
+    { "key": "licenseCode", "value": "" },
+    { "key": "deviceMac", "value": "AA:BB:CC:DD:EE:FF" }
   ],
   "item": [
+    {
+      "name": "0. Лаба 2 — сценарий (по порядку)",
+      "description": "Запуск: Collection Runner → эта папка → Run. Все 4 операции + тикет.",
+      "item": [
+        {
+          "name": "01 Login Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Login OK', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.expect(j.accessToken).to.be.a('string');",
+                  "pm.collectionVariables.set('adminToken', j.accessToken);",
+                  "pm.collectionVariables.set('jwtToken', j.accessToken);",
+                  "if (j.refreshToken) pm.collectionVariables.set('refreshToken', j.refreshToken);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"Admin1234!\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/login"
+          }
+        },
+        {
+          "name": "02 Create license (ADMIN)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('License created', () => pm.response.to.have.status(201));",
+                  "const j = pm.response.json();",
+                  "pm.expect(j.code).to.be.a('string').and.not.empty;",
+                  "pm.collectionVariables.set('licenseCode', j.code);",
+                  "console.log('licenseCode=' + j.code);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": 1,\n  \"typeId\": 1,\n  \"ownerId\": 2,\n  \"deviceCount\": 3,\n  \"description\": \"Лаба 2 — Car Service Desktop\"\n}"
+            },
+            "url": "{{baseUrl}}/api/license"
+          }
+        },
+        {
+          "name": "03 Renew (ADMIN, до активации)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Renew OK or business rule', function () {",
+                  "  pm.expect([200, 400]).to.include(pm.response.code);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "  const j = pm.response.json();",
+                  "  pm.test('TicketResponse after renew', () => pm.expect(j.ticket).to.be.an('object'));",
+                  "  pm.test('Has signature', () => pm.expect(j.signature).to.be.a('string').and.not.empty);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"{{licenseCode}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/license/renew"
+          }
+        },
+        {
+          "name": "04 Login Client (owner)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Login OK', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set('clientToken', j.accessToken);",
+                  "pm.collectionVariables.set('jwtToken', j.accessToken);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"client\",\n  \"password\": \"Client1234!\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/login"
+          }
+        },
+        {
+          "name": "05 Activate (owner) → TicketResponse",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Activate OK', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "const t = j.ticket;",
+                  "pm.test('TicketResponse', () => { pm.expect(t).to.be.an('object'); pm.expect(j.signature).to.be.a('string').and.not.empty; });",
+                  "pm.test('Ticket: serverTime', () => pm.expect(t.serverTime).to.exist);",
+                  "pm.test('Ticket: ticketLifetimeSeconds', () => pm.expect(t.ticketLifetimeSeconds).to.be.above(0);",
+                  "pm.test('Ticket: firstActivationDate', () => pm.expect(t.firstActivationDate).to.exist);",
+                  "pm.test('Ticket: expirationDate', () => pm.expect(t.expirationDate).to.exist);",
+                  "pm.test('Ticket: userId', () => pm.expect(t.userId).to.eql(2);",
+                  "pm.test('Ticket: deviceId', () => pm.expect(t.deviceId).to.exist);",
+                  "pm.test('Ticket: blocked', () => pm.expect(t.blocked).to.eql(false);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activationKey\": \"{{licenseCode}}\",\n  \"deviceMac\": \"{{deviceMac}}\",\n  \"deviceName\": \"PC-Service-1\"\n}"
+            },
+            "url": "{{baseUrl}}/api/license/activate"
+          }
+        },
+        {
+          "name": "06 Check → TicketResponse",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Check OK', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "const t = j.ticket;",
+                  "pm.test('Ticket + signature', () => {",
+                  "  pm.expect(t).to.be.an('object');",
+                  "  pm.expect(j.signature).to.be.a('string').and.not.empty;",
+                  "  pm.expect(t.serverTime).to.exist;",
+                  "  pm.expect(t.expirationDate).to.exist;",
+                  "  pm.expect(t.userId).to.exist;",
+                  "  pm.expect(t.deviceId).to.exist;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceMac\": \"{{deviceMac}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/license/check"
+          }
+        }
+      ]
+    },
     {
       "name": "1. Auth",
       "item": [
@@ -22,7 +224,10 @@
               "script": {
                 "exec": [
                   "const j = pm.response.json();",
-                  "if (j.accessToken) pm.collectionVariables.set('jwtToken', j.accessToken);",
+                  "if (j.accessToken) {",
+                  "  pm.collectionVariables.set('adminToken', j.accessToken);",
+                  "  pm.collectionVariables.set('jwtToken', j.accessToken);",
+                  "}",
                   "if (j.refreshToken) pm.collectionVariables.set('refreshToken', j.refreshToken);"
                 ],
                 "type": "text/javascript"
@@ -47,7 +252,10 @@
               "script": {
                 "exec": [
                   "const j = pm.response.json();",
-                  "if (j.accessToken) pm.collectionVariables.set('jwtToken', j.accessToken);"
+                  "if (j.accessToken) {",
+                  "  pm.collectionVariables.set('clientToken', j.accessToken);",
+                  "  pm.collectionVariables.set('jwtToken', j.accessToken);",
+                  "}"
                 ],
                 "type": "text/javascript"
               }
@@ -71,7 +279,10 @@
               "script": {
                 "exec": [
                   "const j = pm.response.json();",
-                  "if (j.accessToken) pm.collectionVariables.set('jwtToken', j.accessToken);",
+                  "if (j.accessToken) {",
+                  "  pm.collectionVariables.set('jwtToken', j.accessToken);",
+                  "  pm.collectionVariables.set('adminToken', j.accessToken);",
+                  "}",
                   "if (j.refreshToken) pm.collectionVariables.set('refreshToken', j.refreshToken);"
                 ],
                 "type": "text/javascript"
@@ -91,10 +302,10 @@
       ]
     },
     {
-      "name": "2. License (ADMIN create / renew)",
+      "name": "2. License — ADMIN",
       "item": [
         {
-          "name": "Create license (ADMIN)",
+          "name": "Create license",
           "event": [
             {
               "listen": "test",
@@ -110,7 +321,7 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{jwtToken}}", "type": "string" }]
+              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
             },
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
@@ -122,11 +333,11 @@
           }
         },
         {
-          "name": "Renew license (ADMIN only)",
+          "name": "Renew (ADMIN)",
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{jwtToken}}", "type": "string" }]
+              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
             },
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
@@ -134,44 +345,107 @@
               "mode": "raw",
               "raw": "{\n  \"code\": \"{{licenseCode}}\"\n}"
             },
-            "url": "{{baseUrl}}/api/license/renew"
+            "url": "{{baseUrl}}/api/license/renew",
+            "description": "Работает если лицензия не активирована ИЛИ до endingDate осталось ≤7 дней. Иначе 400."
           }
         }
       ]
     },
     {
-      "name": "3. License (owner activate / check)",
+      "name": "3. License — owner (Ticket)",
       "item": [
         {
-          "name": "Activate (owner only)",
+          "name": "Activate → TicketResponse",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const j = pm.response.json();",
+                  "  pm.test('ticket + signature', () => {",
+                  "    pm.expect(j.ticket).to.be.an('object');",
+                  "    pm.expect(j.signature).to.be.a('string');",
+                  "  });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{jwtToken}}", "type": "string" }]
+              "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }]
             },
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"activationKey\": \"{{licenseCode}}\",\n  \"deviceMac\": \"AA:BB:CC:DD:EE:FF\",\n  \"deviceName\": \"PC-Service-1\"\n}"
+              "raw": "{\n  \"activationKey\": \"{{licenseCode}}\",\n  \"deviceMac\": \"{{deviceMac}}\",\n  \"deviceName\": \"PC-Service-1\"\n}"
             },
             "url": "{{baseUrl}}/api/license/activate"
           }
         },
         {
-          "name": "Check license (read ticket)",
+          "name": "Check → TicketResponse",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const j = pm.response.json();",
+                  "  pm.test('7 полей ticket', () => {",
+                  "    const t = j.ticket;",
+                  "    pm.expect(t.serverTime).to.exist;",
+                  "    pm.expect(t.ticketLifetimeSeconds).to.exist;",
+                  "    pm.expect(t.firstActivationDate).to.exist;",
+                  "    pm.expect(t.expirationDate).to.exist;",
+                  "    pm.expect(t.userId).to.exist;",
+                  "    pm.expect(t.deviceId).to.exist;",
+                  "    pm.expect(t).to.have.property('blocked');",
+                  "  });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{jwtToken}}", "type": "string" }]
+              "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }]
             },
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"deviceMac\": \"AA:BB:CC:DD:EE:FF\"\n}"
+              "raw": "{\n  \"deviceMac\": \"{{deviceMac}}\"\n}"
             },
             "url": "{{baseUrl}}/api/license/check"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Проверка прав (опционально)",
+      "item": [
+        {
+          "name": "Activate as ADMIN (ожидается ошибка)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activationKey\": \"{{licenseCode}}\",\n  \"deviceMac\": \"11:22:33:44:55:66\",\n  \"deviceName\": \"Wrong-User\"\n}"
+            },
+            "url": "{{baseUrl}}/api/license/activate",
+            "description": "Владелец license.owner = client (id 2). Admin не может активировать — 400."
           }
         }
       ]

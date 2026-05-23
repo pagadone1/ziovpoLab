@@ -1,9 +1,8 @@
-### Лаба 2 — порядок: Admin login → Create → Client login → Activate → Check
+### Лаба 2 — полный сценарий (сверху вниз)
 @baseUrl = https://localhost:8443
-@adminToken = {{loginAdmin.response.body.accessToken}}
-@clientToken = {{loginClient.response.body.accessToken}}
+@deviceMac = AA:BB:CC:DD:EE:FF
 
-### 1. Admin
+### 01 Admin login
 # @name loginAdmin
 POST {{baseUrl}}/api/auth/login
 Content-Type: application/json
@@ -13,7 +12,9 @@ Content-Type: application/json
   "password": "Admin1234!"
 }
 
-### 2. Создать лицензию (только ADMIN), владелец client (id=2)
+@adminToken = {{loginAdmin.response.body.accessToken}}
+
+### 02 Create license (ADMIN)
 # @name createLicense
 POST {{baseUrl}}/api/license
 Authorization: Bearer {{adminToken}}
@@ -24,10 +25,21 @@ Content-Type: application/json
   "typeId": 1,
   "ownerId": 2,
   "deviceCount": 3,
-  "description": "Демо"
+  "description": "Лаба 2"
 }
 
-### 3. Client (владелец)
+@licenseCode = {{createLicense.response.body.code}}
+
+### 03 Renew (до активации — демо продления)
+POST {{baseUrl}}/api/license/renew
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "code": "{{licenseCode}}"
+}
+
+### 04 Client login (владелец)
 # @name loginClient
 POST {{baseUrl}}/api/auth/login
 Content-Type: application/json
@@ -37,31 +49,24 @@ Content-Type: application/json
   "password": "Client1234!"
 }
 
-### 4. Активация — только владелец (подставь code из createLicense)
+@clientToken = {{loginClient.response.body.accessToken}}
+
+### 05 Activate → TicketResponse (7 полей + signature)
 POST {{baseUrl}}/api/license/activate
 Authorization: Bearer {{clientToken}}
 Content-Type: application/json
 
 {
-  "activationKey": "КОД_ИЗ_CREATE",
-  "deviceMac": "AA:BB:CC:DD:EE:FF",
-  "deviceName": "PC-1"
+  "activationKey": "{{licenseCode}}",
+  "deviceMac": "{{deviceMac}}",
+  "deviceName": "PC-Service-1"
 }
 
-### 5. Проверка (не меняет БД, только TicketResponse)
+### 06 Check → TicketResponse (БД не меняется)
 POST {{baseUrl}}/api/license/check
 Authorization: Bearer {{clientToken}}
 Content-Type: application/json
 
 {
-  "deviceMac": "AA:BB:CC:DD:EE:FF"
-}
-
-### 6. Продление — снова Admin
-POST {{baseUrl}}/api/license/renew
-Authorization: Bearer {{adminToken}}
-Content-Type: application/json
-
-{
-  "code": "КОД_ИЗ_CREATE"
+  "deviceMac": "{{deviceMac}}"
 }
