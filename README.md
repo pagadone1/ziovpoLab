@@ -1,10 +1,3 @@
-# Удалённая IT поддержка внутренних пользователей
-
-Серверная часть (Spring Boot): тикеты, исполнители, SLA, JWT, HTTPS, PostgreSQL.
-
-**Лабораторная 1:** [docs/LAB1.md](docs/LAB1.md) · ER: [docs/er-diagram.md](docs/er-diagram.md) · UML: [docs/uml-overview.md](docs/uml-overview.md)
-
-Репозиторий: https://github.com/pagadone1/ziovpoLab (`main`)
 
 ## Запуск
 
