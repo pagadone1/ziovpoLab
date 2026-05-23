@@ -25,7 +25,7 @@ jobs:
       - name: Run Tests
         run: ./mvnw -B clean test -Dspring.profiles.active=test
         env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD || 'changeit' }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD != '' && secrets.KEYSTORE_PASSWORD || 'changeit' }}
           JWT_SECRET: testjwtsecretforcionlymin32characterslong
 
   build:
@@ -47,7 +47,7 @@ jobs:
       - name: Build JAR
         run: ./mvnw -B clean package -DskipTests
         env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD || 'changeit' }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD != '' && secrets.KEYSTORE_PASSWORD || 'changeit' }}
           JWT_SECRET: testjwtsecretforcionlymin32characterslong
           DB_USERNAME: ci
           DB_PASSWORD: ci
