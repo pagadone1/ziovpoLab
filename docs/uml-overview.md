@@ -1,37 +1,27 @@
-# UML — краткая шпаргалка (лаб. 1)
+# UML — автосервис
 
-## Зачем UML
+Кратко по типам диаграмм (лаба 1 — теория).
 
-Единый язык для описания системы до и во время разработки: структура, поведение, развёртывание.
-
-## Основные типы диаграмм
-
-| Диаграмма | Назначение |
-|-----------|------------|
-| **Use Case** | Кто (актор) и что делает с системой |
-| **Class** | Классы, поля, связи (наследование, ассоциации) |
-| **Sequence** | Порядок вызовов во времени (например, login → JWT) |
-| **Activity** | Бизнес-процесс, ветвления |
-| **Component** | Модули и зависимости (API, Security, DB) |
-| **Deployment** | Серверы, БД, HTTPS |
-
-## Пример для IT Support (Sequence: login)
+| Диаграмма | Пример для Car Service |
+|-----------|-------------------------|
+| Use Case | Клиент создаёт заказ, механик закрывает заказ |
+| Class | Customer, Vehicle, ServiceOrder |
+| Sequence | login → JWT → создание ServiceOrder |
+| Component | API, Security, PostgreSQL |
 
 ```mermaid
 sequenceDiagram
     participant C as Client
     participant A as AuthController
-    participant S as AuthService
-    participant J as JwtTokenUtils
+    participant O as ServiceOrderController
     participant DB as PostgreSQL
 
     C->>A: POST /api/auth/login
-    A->>S: login(username, password)
-    S->>DB: проверка пользователя
-    S->>J: generateToken + generateRefreshToken
-    S->>DB: save UserSession
-    S-->>A: access + refresh
-    A-->>C: 200 OK
+    A->>DB: проверка User
+    A-->>C: access + refresh
+    C->>O: POST /api/service-orders
+    O->>DB: save order
+    O-->>C: 201 Created
 ```
 
-Для лабораторной 1 достаточно понимать назначение диаграмм; детальные UML по домену — в следующих работах.
+Подробная реализация сценариев — в `PO6/demo`.

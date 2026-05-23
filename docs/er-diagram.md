@@ -1,66 +1,45 @@
-# ER-диаграмма (домен IT Support)
-
-## Основные понятия ER
-
-- **Сущность** — объект предметной области (Ticket, Users).
-- **Атрибут** — свойство сущности (title, email).
-- **Связь** — отношение между сущностями; кратность: 1:1, 1:N, M:N.
-
-## Схема проекта
+# ER-диаграмма — автосервис
 
 ```mermaid
 erDiagram
-    USERS ||--o{ USER_SESSION : has
-    USERS {
-        bigint id PK
-        string username
-        string email
-        string password
-        string role
-    }
-    USER_SESSION {
-        bigint id PK
-        string refresh_token
-        string status
-        timestamp expires_at
-    }
-    CATEGORY ||--o{ TICKET : classifies
-    CATEGORY {
-        bigint id PK
-        string name
-    }
-    EXECUTOR ||--o{ TICKET : handles
-    EXECUTOR {
+    CUSTOMER ||--o{ VEHICLE : owns
+    CUSTOMER ||--o{ SERVICE_ORDER : places
+    VEHICLE ||--o{ SERVICE_ORDER : for
+    MECHANIC ||--o{ SERVICE_ORDER : performs
+    SERVICE_ORDER ||--o{ ORDER_PART : contains
+    PART ||--o{ ORDER_PART : used_in
+
+    CUSTOMER {
         bigint id PK
         string name
         string email
-        string department
+        string phone
     }
-    SLA ||--o{ TICKET : defines_deadline
-    SLA {
+    VEHICLE {
+        bigint id PK
+        string plate_number
+        string brand
+        int year
+    }
+    MECHANIC {
         bigint id PK
         string name
-        int response_hours
-        int resolution_hours
+        string specialization
     }
-    TICKET {
+    PART {
         bigint id PK
-        string title
-        string description
+        string name
+        decimal price
+        int stock_quantity
+    }
+    SERVICE_ORDER {
+        bigint id PK
         string status
-        string resolution
-        timestamp created_at
-        timestamp due_date
+        decimal labor_cost
+    }
+    ORDER_PART {
+        int quantity
     }
 ```
 
-## Связи
-
-| Связь | Тип | Описание |
-|-------|-----|----------|
-| Users → UserSession | 1:N | Сессии refresh-токенов |
-| Category → Ticket | 1:N | Категория тикета |
-| Executor → Ticket | 1:N | Исполнитель тикета |
-| SLA → Ticket | 1:N | SLA для расчёта сроков |
-
-Пользователь (Users) создаёт тикеты через API; в текущей модели JPA связь User–Ticket задаётся на уровне бизнес-логики контроллеров.
+Сущности и связи соответствуют проекту `PO6` (Car Service).

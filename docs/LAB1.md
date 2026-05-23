@@ -1,57 +1,26 @@
 # Лабораторная работа 1
 
-Репозиторий серверной части: **IT Support (`itsupp`)**  
+Проект: **Car Service (автосервис)**  
 GitHub: https://github.com/pagadone1/ziovpoLab (ветка `main`)
 
-Инфраструктура безопасности перенесена из проекта РБПО (PO6 — автосервис): JWT, роли, HTTPS, PostgreSQL, CI.
+Инфраструктура (JWT, роли, HTTPS, PostgreSQL, CI) перенесена из РБПО — репозиторий `PO6`.
 
-## Выполнение задания
+## Задание
 
-| Требование | Реализация |
-|------------|------------|
-| Git-репозиторий сервера | Этот репозиторий, ветка `main` |
-| JWT access / refresh | `JwtTokenUtils`, `AuthService`, `/api/auth/login`, `/api/auth/refresh` |
-| Авторизация (роли, правила) | `SecurityConfig`, `@EnableMethodSecurity`, роли `ROLE_ADMIN`, `ROLE_USER` |
-| HTTPS | `server.ssl.*` в `application.properties`, `keystore.p12` |
-| PostgreSQL | `spring.datasource.*`, `docker-compose.yml`, БД `itsupp_db` |
-| Секреты | `.env` (локально), GitHub Secrets: `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD` |
-| CI: test и build | `.github/workflows/build.yml` — jobs `test`, `build` |
-| UML (теория) | [uml-overview.md](uml-overview.md) |
-| ER (теория + схема домена) | [er-diagram.md](er-diagram.md) |
-
-## Секреты
-
-Скопируйте `.env.example` → `.env` и задайте значения:
-
-- `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` — PostgreSQL
-- `JWT_SECRET` — не короче 32 символов (без дефисов в тестах)
-- `KEYSTORE_PASSWORD` — пароль PKCS12
-- `ADMIN_PASSWORD` — пароль bootstrap-админа
-
-В GitHub (Settings → Secrets → Actions) должны быть те же секреты keystore, что и в РБПО, либо новые с перекодированием:
-
-```bash
-base64 -w0 src/main/resources/keystore.p12
-```
+| Требование | Где |
+|------------|-----|
+| Git-репозиторий | `ziovpoLab`, ветка `main` |
+| JWT access / refresh | `AuthService`, `/api/auth/*` |
+| Роли и доступ | `SecurityConfig` |
+| HTTPS | `keystore.p12`, `application.properties` |
+| PostgreSQL | `docker-compose.yml`, `.env` |
+| Секреты | `.env`, GitHub Secrets |
+| CI test + build | `.github/workflows/build.yml` |
+| UML | [uml-overview.md](uml-overview.md) |
+| ER | [er-diagram.md](er-diagram.md) |
 
 ## Запуск
 
-```bash
-docker compose up --build
-```
+`.env.example` → `.env`, `docker compose up --build` → https://localhost:8443
 
-Приложение: `https://localhost:8443`
-
-Проверка auth:
-
-```http
-POST /api/auth/register
-POST /api/auth/login
-POST /api/auth/refresh  { "refresh_token": "..." }
-```
-
-## CI
-
-Workflow **itsupp ci/cd**: на push в `main` выполняются `test` (`mvnw clean test`) и `build` (`mvnw package`, артефакт JAR).
-
-Статус: https://github.com/pagadone1/ziovpoLab/actions
+Полный домен автосервиса (CRUD заказов и т.д.) — в `PO6/demo`.
