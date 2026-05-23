@@ -1,41 +1,39 @@
+# IT Support (itsupp)
 
-## Запуск
+Бэкенд на Spring Boot — внутренняя техподдержка: тикеты, категории, исполнители, SLA.
 
-1. Скопируйте `.env.example` → `.env` и задайте пароли.
-2. `keystore.p12` в `src/main/resources/` (локальный HTTPS, не в git).
-3. `docker compose up --build` — PostgreSQL и приложение на `https://localhost:8443`.
+Репозиторий курса: https://github.com/pagadone1/ziovpoLab (ветка `main`).
 
-Локальная БД (без Docker): PostgreSQL `itsupp_db`, пользователь `itsupp_user`.
+JWT, HTTPS и CI взяты из РБПО (проект PO6), доменная логика — своя.
 
-## Секреты и CI
+## Как запустить
 
-GitHub Actions: `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`.  
-Локально — `.env`.
+Скопировать `.env.example` в `.env`, прописать пароли.
 
-Pipeline: jobs **test** и **build** (см. `.github/workflows/build.yml`).
+Положить `keystore.p12` в `src/main/resources/` (в git не коммитится).
 
-## Безопасность (из РБПО PO6)
+```bash
+docker compose up --build
+```
 
-- JWT access + refresh, сессии в `UserSession`
-- Роли: `ROLE_ADMIN`, `ROLE_USER` — `SecurityConfig`
-- HTTPS: порт 8443, PKCS12 keystore
+После старта: https://localhost:8443
 
-## Тема
+Без Docker — PostgreSQL, база `itsupp_db`, пользователь `itsupp_user` (см. скрипты в папке `database` у соседних лаб, если настраивали вручную).
 
-Сервис для отслеживания и обработки IT-тикетов внутри компании.
+## Переменные
 
-## Основные сущности
+В `.env`: хост и креды БД, `JWT_SECRET`, `KEYSTORE_PASSWORD`, пароль админа.
 
-- Ticket — тикет (инцидент, запрос или проблема)
-- Users — пользователь системы
-- Executor — сотрудник, выполняющий тикет
-- Category — категория тикета
-- SLA — время реакции и решения
+В GitHub Actions нужны `KEYSTORE_BASE64` и `KEYSTORE_PASSWORD` — как в РБПО.
 
-## Операции
+## API
 
-- CRUD для сущностей
-- Назначение тикета исполнителю
-- Закрытие тикета с указанием решения
-- Просроченные тикеты и эскалация
-- Тикеты конкретного исполнителя
+Авторизация: `POST /api/auth/register`, `/api/auth/login`, `/api/auth/refresh`.
+
+Остальное под `/api/...` — тикеты, пользователи, категории и т.д. Админские методы только с `ROLE_ADMIN`.
+
+## Лаба 1
+
+Чеклист и схемы: [docs/LAB1.md](docs/LAB1.md), [docs/er-diagram.md](docs/er-diagram.md), [docs/uml-overview.md](docs/uml-overview.md).
+
+CI: `.github/workflows/build.yml` — `test`, потом `build`.
